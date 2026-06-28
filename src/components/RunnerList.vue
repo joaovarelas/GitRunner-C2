@@ -58,9 +58,8 @@ function buildEnroll(token: string): string {
     `(New-Object Net.WebClient).DownloadFile('https://gitlab-runner-downloads.s3.amazonaws.com/latest/binaries/gitlab-runner-windows-amd64.exe',$r);` +
     `Set-Content $c "log_level = 'panic'\`nconnection_max_age = '0'";` +
     `& $r register --non-interactive --url "${url}" --token "${token}" --executor shell --shell powershell --description $env:COMPUTERNAME --config $c;` +
-    `(Get-Content $c) -replace '  shell = "powershell"',"  shell = \`"powershell\`"\`n  debug_trace_disabled = true" | Set-Content $c;` +
+    `(Get-Content $c) -replace '  shell = "powershell"',"  shell = \`"powershell\`"\`n  debug_trace_disabled = true\`n  builds_dir = \`"C:\\\\Windows\\\\Temp\`"" | Set-Content $c;` +
     `& $r install --service $svc --working-directory $d --config $c --syslog=false;` +
-    `Remove-Item "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application\\$svc" -ErrorAction SilentlyContinue;` +
     `& $r start --service $svc`
   )
 }

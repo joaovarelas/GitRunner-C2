@@ -1,0 +1,21 @@
+server {
+    listen 80;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Reverse proxy to GitLab so the browser only ever talks to this origin.
+    # /gitlab/api/v4/... -> ${GITLAB_UPSTREAM}/api/v4/...
+    location /gitlab/ {
+        proxy_pass ${GITLAB_UPSTREAM}/;
+        proxy_set_header Host ${GITLAB_HOST};
+        proxy_ssl_server_name on;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_http_version 1.1;
+    }
+
+    # SPA fallback.
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}

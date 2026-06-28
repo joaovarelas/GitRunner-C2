@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Scale the whole UI ~10% larger via the rem base (text + spacing). */
+html {
+  font-size: 110%;
+}
+
+html,
+body {
+  background: #f4f4f5; /* zinc-100 */
+}
+
+html.dark,
+html.dark body {
+  background: #09090b; /* zinc-950 */
+}

@@ -1,0 +1,15 @@
+# Production: builds the SPA and serves it via NGINX, which also reverse-proxies
+# /gitlab/* to your GitLab instance (kills CORS, works for SaaS and on-prem).
+#
+# To target an on-prem instance later, change the two env vars below and rebuild.
+services:
+  web:
+    build: .
+    ports:
+      - "8080:80"
+    environment:
+      # Upstream GitLab instance the proxy forwards to.
+      GITLAB_UPSTREAM: "https://gitlab.com"
+      # Host header sent upstream (must match the instance hostname).
+      GITLAB_HOST: "gitlab.com"
+    restart: unless-stopped
